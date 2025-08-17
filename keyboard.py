@@ -1,10 +1,12 @@
-from item import item
+from item import Item
 
-class keybord(item):
-    
-    def __init__(self, name: str, price: float, quantity = 0):
-        # Call to cuper function to have access to all attributes / methods
-        super().__init__(
-            name, price, quantity
-        )
-        
+
+class Keyboard(Item):
+    """Specialized Item representing a keyboard.
+
+    Demonstrates simple inheritance with no new attributes.
+    """
+
+    def __init__(self, name: str, price: float, quantity: int = 0) -> None:
+        # Call to super to reuse Item's initialization
+        super().__init__(name, price, quantity)
