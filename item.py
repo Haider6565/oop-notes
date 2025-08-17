@@ -1,153 +1,143 @@
-from __future__ import annotations
+"""Core OOP example: an Item class with attributes, methods, and utilities.
+
+This file demonstrates key OOP ideas:
+- Class vs instance attributes (`pay_rate`, `all` vs per-object fields)
+- Encapsulation (private attributes like `__name` and `__price`)
+- Properties/getters-setters (controlled access to attributes)
+- Class methods (alternative constructors) and static methods (utilities)
+- Special/dunder methods like `__repr__` for better printing/debugging
+"""
 
 import csv
-from pathlib import Path
-from typing import List, Any
 
-
-class Item:
+class item:
     """Represents a generic store item.
 
-    Concepts demonstrated:
-    - Class vs instance attributes (pay_rate, all)
-    - Encapsulation via private attributes (__name, __price)
-    - Properties with validation (name, price)
-    - Classmethod for alternative constructors (instantiate_from_csv)
-    - Staticmethod for utility logic (is_integer)
-    - Dunder methods (__repr__)
+    Note: Class name kept as `item` to match your original code.
     """
 
-    # Class attributes (shared by all instances)
-    pay_rate: float = 0.8  # 20% discount
-    all: List["Item"] = []
-
-    def __init__(self, name: str, price: float, quantity: int = 0) -> None:
-        """Create a new item.
+    # Class attributes (shared by all objects of this class)
+    pay_rate = 0.8  # 20% discount applied by apply_discount()
+    all = []  # a registry of all created items (instances)
+    
+    def __init__(self, name: str, price: float, quantity = 0):
+        """Initialize a new item (object/instance).
 
         Args:
-            name: Item name (max 30 chars).
-            price: Unit price (>= 0).
-            quantity: Units in stock (>= 0).
-
-        Raises:
-            ValueError: If price or quantity are negative, or name too long.
-            TypeError: If provided types are incorrect.
+            name: The product name.
+            price: Unit price (must be >= 0).
+            quantity: How many we have in stock (must be >= 0).
         """
-        if not isinstance(name, str):
-            raise TypeError("name must be a string")
-        if not isinstance(price, (int, float)):
-            raise TypeError("price must be a number")
-        if not isinstance(quantity, int):
-            raise TypeError("quantity must be an integer")
 
-        if price < 0:
-            raise ValueError(f"price {price} must be >= 0")
-        if quantity < 0:
-            raise ValueError(f"quantity {quantity} must be >= 0")
-        if len(name) > 30:
-            raise ValueError("name is too long (max 30 chars)")
 
-        # Private attributes (encapsulation)
-        self.__name: str = name
-        self.__price: float = float(price)
+    # Validation (defensive programming): make sure inputs are valid
+        assert price >= 0 , f"price {price} is not greater than or equal to zero"
+        assert quantity >= 0, f"quantity {quantity} is not greater than or equal to zero"
 
-        # Public attribute (by convention)
-        self.quantity: int = quantity
+    # Assign to the object (self) — these are instance attributes
+        self.__name = name
+        self.__price = price
+        self.quantity = quantity
 
-        # Keep track of all instances
-        Item.all.append(self)
-
-    # -------------------- Properties (encapsulation) --------------------
-    @property
-    def name(self) -> str:
-        """Read/write name with validation."""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str) -> None:
-        if not isinstance(value, str):
-            raise TypeError("name must be a string")
-        if len(value) == 0:
-            raise ValueError("name cannot be empty")
-        if len(value) > 30:
-            raise ValueError("name is too long (max 30 chars)")
-        self.__name = value
+    # Keep track of this instance at the class level
+        item.all.append(self)
 
     @property
-    def price(self) -> float:
-        """Read-only price; modify via helpers (apply_discount/increment)."""
+    def price(self):
+        """Read-only property for price (encapsulation).
+
+        We expose price via a getter so price changes go through methods
+        like apply_discount/apply_increment.
+        """
         return self.__price
+    
+    def apply_discount(self):
+        """Apply the class-wide discount to the price."""
+        self.__price = self.__price * item.pay_rate
 
-    # -------------------- Business logic methods --------------------
-    def calculate_total_price(self) -> float:
-        """Total inventory value for this item (price * quantity)."""
-        return self.__price * self.quantity
 
-    def apply_discount(self) -> None:
-        """Apply class-level discount (pay_rate) to price."""
-        self.__price = self.__price * Item.pay_rate
-
-    def apply_increment(self, increment_value: float) -> None:
+    def apply_increment(self, increment_value):
         """Increase price by a percentage (e.g., 0.2 = +20%)."""
-        if increment_value < 0:
-            raise ValueError("increment_value must be >= 0")
-        self.__price = self.__price * (1 + increment_value)
+        self.__price = self.__price + self.__price * increment_value
 
-    # -------------------- Alt constructors / utilities --------------------
+    @property
+    # Property decorator = Read only attribute
+    def name(self):
+        """Read the name (use the setter to update safely)."""
+        return self.__name
+    
+    @name.setter
+    def name(self, value):
+        """Validate and set the name. Keeps the object in a valid state."""
+        if len(value) > 10:
+            raise Exception ("The name is too long")
+        else:
+            self.__name = value
+
+    def calculate_total_price(self):
+        """Return total inventory value for this item."""
+        return self.__price * self.quantity
+    
+
     @classmethod
-    def instantiate_from_csv(cls) -> List["Item"]:
-        """Create items from items.csv located next to this file.
+    def instantiate_from_csv(cls):
+        """Alternative constructor: build items from items.csv.
 
-        Returns the list of created Item instances.
+        Reads the CSV file into a list of dicts, then creates item objects.
+        The new objects are also stored in `item.all`.
         """
-        csv_path = Path(__file__).with_name("items.csv")
-        created: List[Item] = []
-        with csv_path.open("r", newline="", encoding="utf-8") as f:
+        with open('items.csv', 'r') as f:
             reader = csv.DictReader(f)
-            for row in reader:
-                created.append(
-                    cls(
-                        name=str(row.get("name", "")).strip().strip("\"") or "Unnamed",
-                        price=float(row.get("price", 0) or 0),
-                        quantity=int(row.get("quantity", 0) or 0),
-                    )
-                )
-        return created
+            items = list(reader)
+
+        for item in items:
+            cls(
+                name = item.get('name'),
+                price = float(item.get('price')),
+                quantity = int(item.get('quantity')),
+            )
 
     @staticmethod
-    def is_integer(num: Any) -> bool:
-        """Return True if num is an int or a float with no fractional part."""
-        if isinstance(num, bool):  # bool is a subclass of int, exclude it
-            return False
+    def is_integer(num):
+        """Return True for ints and floats like 5.0 (no fractional part).
+
+        Examples: 5 -> True, 5.0 -> True, 5.1 -> False
+        """
+        # We will count out the floats that are point zero (e.g. 5.0, 10.0)
         if isinstance(num, float):
+            # Count out the floats that are point zero
             return num.is_integer()
-        return isinstance(num, int)
+        elif isinstance(num, int):
+            return True
+        else:
+            return False
 
-    # -------------------- Dunder methods --------------------
-    def __repr__(self) -> str:  # Helpful for debugging/printing lists
+
+    def __repr__(self):
+        """Unambiguous string representation (useful for debugging)."""
         return f"{self.__class__.__name__}('{self.name}', {self.price}, {self.quantity})"
+    
+    def __connect(self, smtp_server):
+        # Pretend to set up an email connection (implementation hidden)
+        pass
 
-    # -------------------- Example of (fake) private helpers --------------------
-    def __connect(self, smtp_server: str) -> None:
-        # Imagine real email setup here
-        _ = smtp_server
-
-    def __prepare_body(self) -> str:
-        return (
-            "Hello,\n"
-            f"We have {self.name} available {self.quantity} times.\n"
-            "Regards, Store Bot\n"
-        )
-
-    def __send(self) -> None:
-        # Imagine sending the email here
-        return None
-
-    def send_email(self) -> None:
-        """Public API that composes the private helpers (abstraction)."""
-        self.__connect("smtp.example.com")
-        body = self.__prepare_body()
+    def __prepare_body(self):
+        # Prepare a simple email body using this object's data
+        return f"""
+        Hello Haider.
+        We have {self.name} {self.quantity} times.
+        Regards,
+        JimShapedCoding
+        """
+    
+    def __send(self):
+        # Pretend to send the email
+        pass
+    
+    def send_email(self):
+        """Public method: hides the email sending details from the caller."""
+        self.__connect('')
+        self.__prepare_body()
         self.__send()
-        # Not returning the body to keep the API minimal; this is illustrative only.
 
-
+    

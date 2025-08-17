@@ -1,19 +1,21 @@
-class ItemBasic:
-    """A minimal example showing how a class groups data and behavior."""
-
-    # Methods always take `self` as the first parameter.
-    def calculate_total_price(self, price: float, quantity: int) -> float:
-        return price * quantity
+"""Simplest class example to show how data and behavior live together."""
 
 
-# Create two objects (instances) of ItemBasic at runtime
-item1 = ItemBasic()
-item1.name = "phone"  # dynamic attribute assignment for simplicity
+class item:
+    # A method is a function defined inside a class.
+    # `self` is the instance (the specific object) the method is called on.
+    def calculate_total_price(self, x, y):
+        return x * y
+
+
+# Create two different objects (instances) of the same class
+item1 = item()
+item1.name = "phone"   # adding attributes on the instance
 item1.price = 100
 item1.quantity = 5
 print(item1.calculate_total_price(item1.price, item1.quantity))
 
-item2 = ItemBasic()
+item2 = item()
 item2.name = "laptop"
 item2.price = 1000
 item2.quantity = 3

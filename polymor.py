@@ -1,32 +1,11 @@
-"""Polymorphism examples.
+"""Polymorphism demo: same function works with different types.
 
-1) Built-in polymorphism: the same function `len` works on many types.
-2) Duck typing: a function works with any object that implements the needed methods.
+Here, the built-in function `len()` is used with a string and a list.
+It behaves correctly because both types implement a length protocol.
 """
 
-# Built-in polymorphism
 name = "Jim"  # str
-print(len(name))  # 3
+print(len(name))  # -> 3
 
 some_list = ["Some", "Name"]  # list
-print(len(some_list))  # 2
-
-
-# Duck typing example
-class PdfExporter:
-	def export(self) -> str:
-		return "Exporting as PDF"
-
-
-class CsvExporter:
-	def export(self) -> str:
-		return "Exporting as CSV"
-
-
-def run_export(exporter) -> None:
-	"""Works with any object providing an `export()` method (duck typing)."""
-	print(exporter.export())
-
-
-run_export(PdfExporter())
-run_export(CsvExporter())
+print(len(some_list))  # -> 2
